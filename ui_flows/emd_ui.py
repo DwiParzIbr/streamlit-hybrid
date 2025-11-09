@@ -1,3 +1,5 @@
+# ui_flows/emd_ui.py
+
 import streamlit as st
 import json
 import numpy as np
@@ -7,114 +9,129 @@ from PIL import Image
 from io import BytesIO
 
 # Impor Lokal
-from constants import METHOD_PVD, DEFAULT_TARGET_BIT_SIZE
-from ui_flows.utils import generate_dummy_message_callback, reset_embed_state
-from methods.spatial.pvd import PVDSteganography, PVD_DEFAULT_PARAM
+from constants import METHOD_EMD, DEFAULT_TARGET_BIT_SIZE
+from ui_flows.utils import generate_dummy_message_callback, reset_embed_state, make_image_grid
+from methods.spatial.emd import EMDSteganography, EMD_DEFAULT_PARAM
 from metrics.impercability import SteganographyMetrics
 from metrics.robustness import RobustnessTester, ATTACK_CONFIGURATIONS
 from helpers.message_binary import message_to_binary
-from ui_flows.utils import make_image_grid
-# --- PERUBAHAN DI SINI: Inisialisasi PVD sekali ---
 
 
 
-def draw_pvd_embed_tab():
-    """Menampilkan UI untuk tab Embed PVD."""
+
+def draw_emd_embed_tab():
+    """Menampilkan UI untuk tab Embed EMD."""
     
     with st.expander("Configure Parameters"):
-        st.info("PVD does not have configurable parameters for this implementation.")
+        # --- PERUBAHAN DI SINI: Mengganti st.info dengan st.number_input ---
+        emd_embed_n = st.number_input(
+            "Pixel group size (n)", 
+            min_value=2, max_value=4, # Batasi n ke nilai yang wajar (n=2 adalah default)
+            value=EMD_DEFAULT_PARAM['n'], 
+            step=1,
+            key="emd_embed_n",
+            on_change=reset_embed_state, args=("emd",),
+            help="Jumlah piksel dalam satu grup. n=2 (default) menggunakan sistem basis-5."
+        )
+        # --- AKHIR PERUBAHAN ---
 
     st.subheader("Message Input")
     col1, col2 = st.columns([0.6, 0.4]) 
     with col1:
-        pvd_embed_msg = st.text_area("Your Secret Message", height=150, key="pvd_embed_msg", label_visibility="collapsed",
-                                     on_change=reset_embed_state, args=("pvd",))
+        emd_embed_msg = st.text_area("Your Secret Message", height=150, key="emd_embed_msg", label_visibility="collapsed",
+                                     on_change=reset_embed_state, args=("emd",))
     with col2:
         with st.container(border=True):
             st.write("Dummy Message Helper")
-            dummy_bit_len = st.number_input("Target Bit Length", min_value=8, value=DEFAULT_TARGET_BIT_SIZE, step=8, key="pvd_dummy_bit_len")
-            st.button("Generate Dummy Message", key="pvd_dummy_btn", on_click=generate_dummy_message_callback, args=("pvd_dummy_bit_len", "pvd_embed_msg"))
+            dummy_bit_len = st.number_input("Target Bit Length", min_value=8, value=DEFAULT_TARGET_BIT_SIZE, step=8, key="emd_dummy_bit_len")
+            st.button("Generate Dummy Message", key="emd_dummy_btn", on_click=generate_dummy_message_callback, args=("emd_dummy_bit_len", "emd_embed_msg"))
     
     st.subheader("Cover Image")
-    cover_image_file = st.file_uploader("Upload Cover Image", type=["png", "jpg", "bmp"], key="pvd_embed_img", label_visibility="collapsed",
-                                        on_change=reset_embed_state, args=("pvd",))
+    cover_image_file = st.file_uploader("Upload Cover Image", type=["png", "jpg", "bmp"], key="emd_embed_img", label_visibility="collapsed",
+                                        on_change=reset_embed_state, args=("emd",))
         
     if cover_image_file is not None:
         st.image(cover_image_file, caption="Uploaded Cover Image", use_container_width=True)
         
     st.divider()
-    embed_button = st.button("Embed Message", type="primary", key="pvd_embed_btn")
+    embed_button = st.button("Embed Message", type="primary", key="emd_embed_btn")
 
     if embed_button:
         if cover_image_file is None:
             st.error("Please upload a cover image first!")
-            st.session_state.pvd_stego_image_bytes = None 
-            st.session_state.pvd_params_json = None
+            st.session_state.emd_stego_image_bytes = None 
+            st.session_state.emd_params_json = None
         else:
             with st.spinner("Embedding message, please wait... ⏳"):
                 try:
                     file_bytes = np.asarray(bytearray(cover_image_file.read()), dtype=np.uint8)
                     cover_image_rgb = cv2.cvtColor(cv2.imdecode(file_bytes, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
                     
-                    # --- PERUBAHAN DI SINI: Menggunakan instance dari cache ---
-                    pvd_stego = PVDSteganography()
-                    stego_image_np, final_bit_length = pvd_stego.embed(cover_image_rgb, pvd_embed_msg)
+                    # --- PERUBAHAN DI SINI: Inisialisasi dinamis ---
+                    emd_stego = EMDSteganography(n=emd_embed_n)
+                    stego_image_np, final_bit_length = emd_stego.embed(cover_image_rgb, emd_embed_msg)
 
                     stego_image_pil = Image.fromarray(stego_image_np)
                     buffer = BytesIO()
                     stego_image_pil.save(buffer, format="PNG")
                     
+                    # --- PERUBAHAN DI SINI: Menyimpan 'n' yang dinamis ---
                     parameters_to_save = {
-                        "method": METHOD_PVD,
+                        "method": METHOD_EMD,
+                        "n": emd_embed_n, # Menyimpan 'n' yang dipilih pengguna
                         "message_bit_length": final_bit_length
                     }
                     
-                    st.session_state.pvd_stego_image_bytes = buffer.getvalue()
-                    st.session_state.pvd_params_json = json.dumps(parameters_to_save, indent=4)
+                    st.session_state.emd_stego_image_bytes = buffer.getvalue()
+                    st.session_state.emd_params_json = json.dumps(parameters_to_save, indent=4)
                             
                 except ValueError as e:
                     st.error(f"Embedding Failed: {e}")
-                    st.session_state.pvd_stego_image_bytes = None
-                    st.session_state.pvd_params_json = None
+                    st.session_state.emd_stego_image_bytes = None
+                    st.session_state.emd_params_json = None
                 except Exception as e:
                     st.error(f"An unexpected error occurred: {e}")
-                    st.session_state.pvd_stego_image_bytes = None
-                    st.session_state.pvd_params_json = None
+                    st.session_state.emd_stego_image_bytes = None
+                    st.session_state.emd_params_json = None
     
-    if st.session_state.pvd_stego_image_bytes is not None:
+    if st.session_state.emd_stego_image_bytes is not None:
         st.subheader("Embedding Results")
         res_col1, res_col2 = st.columns(2)
         with res_col1:
             st.write("**Stego-Image**")
-            st.image(st.session_state.pvd_stego_image_bytes, caption="Steganographic Image", use_container_width=True)
-            st.download_button(label="Download Image", data=st.session_state.pvd_stego_image_bytes, file_name="pvd_stego_image.png", mime="image/png")
+            st.image(st.session_state.emd_stego_image_bytes, caption="Steganographic Image", use_container_width=True)
+            st.download_button(label="Download Image", data=st.session_state.emd_stego_image_bytes, file_name="emd_stego_image.png", mime="image/png")
         with res_col2:
             st.write("**Parameters Used**")
-            st.download_button(label="Download Parameters", data=st.session_state.pvd_params_json, file_name="pvd_parameters.json", mime="application/json")
+            st.download_button(label="Download Parameters", data=st.session_state.emd_params_json, file_name="emd_parameters.json", mime="application/json")
 
 
-def draw_pvd_extract_tab():
-    """Menampilkan UI untuk tab Extract PVD."""
+def draw_emd_extract_tab():
+    """Menampilkan UI untuk tab Extract EMD."""
     
     st.subheader("Load Parameters (Optional)")
     param_file = st.file_uploader(
         "Upload parameters.json file", 
         type=["json"], 
-        key="pvd_extract_param_file"
+        key="emd_extract_param_file"
     )
     
     if param_file is not None:
         try:
             param_data = json.loads(param_file.read().decode('utf-8'))
             
-            if param_data.get('method') != METHOD_PVD:
-                st.warning(f"File parameter ini untuk '{param_data.get('method')}', tetapi Anda memilih PVD.")
+            if param_data.get('method') != METHOD_EMD:
+                st.warning(f"File parameter ini untuk '{param_data.get('method')}', tetapi Anda memilih EMD.")
             
+            # --- PERUBAHAN DI SINI: Memuat 'n' ---
             loaded_bit_length = param_data.get('message_bit_length')
+            loaded_n = param_data.get('n') 
 
             if loaded_bit_length is not None:
-                # Ini berfungsi karena 'pvd_extract_bit_length' tidak memiliki 'value='
-                st.session_state.pvd_extract_bit_length = loaded_bit_length
+                st.session_state.emd_extract_bit_length = loaded_bit_length
+            if loaded_n is not None:
+                st.session_state.emd_extract_n = loaded_n
+            # --- AKHIR PERUBAHAN ---
 
             st.toast("Parameters loaded successfully!")
 
@@ -122,13 +139,20 @@ def draw_pvd_extract_tab():
             st.error(f"Failed to load parameters: {e}")
 
     with st.expander("Configure Parameters"):
-        st.info("PVD does not have configurable parameters for this implementation.")
+        # --- PERUBAHAN DI SINI: Mengganti st.info dengan st.number_input ---
+        emd_extract_n = st.number_input(
+            "Pixel group size (n)", 
+            min_value=2, max_value=4, 
+            step=1,
+            key="emd_extract_n" # Key ini diatur oleh file uploader
+        )
+        # --- AKHIR PERUBAHAN ---
 
     st.subheader("Upload Stego-Image")
     stego_image_file_extract = st.file_uploader(
         "Upload the image you want to extract from", 
         type=["png", "jpg", "bmp"], 
-        key="pvd_extract_img", 
+        key="emd_extract_img", 
         label_visibility="collapsed"
     )
     if stego_image_file_extract is not None:
@@ -138,7 +162,7 @@ def draw_pvd_extract_tab():
     message_bit_length_extract = st.number_input(
         "Enter the bit length of the secret message", 
         min_value=1, 
-        key="pvd_extract_bit_length" # Tidak ada 'value=', jadi ini aman
+        key="emd_extract_bit_length" # Key ini diatur oleh file uploader
     )
     
     st.subheader("Optional Inputs for Metrics")
@@ -147,17 +171,17 @@ def draw_pvd_extract_tab():
         optional_cover_image = st.file_uploader(
             "Original Cover Image (for Imperceptibility)", 
             type=["png", "jpg", "bmp"], 
-            key="pvd_extract_cover"
+            key="emd_extract_cover"
         )
     with col2:
         optional_original_message = st.text_area(
             "Original Message (for Robustness)", 
             height=155, 
-            key="pvd_extract_msg"
+            key="emd_extract_msg"
         )
 
     st.divider()
-    extract_button = st.button("Extract Message", type="primary", key="pvd_extract_btn")
+    extract_button = st.button("Extract Message", type="primary", key="emd_extract_btn")
     
     if extract_button:
         if stego_image_file_extract is None:
@@ -168,9 +192,9 @@ def draw_pvd_extract_tab():
                     file_bytes = np.asarray(bytearray(stego_image_file_extract.read()), dtype=np.uint8)
                     stego_image_rgb = cv2.cvtColor(cv2.imdecode(file_bytes, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
                     
-                    # --- PERUBAHAN DI SINI: Menggunakan instance dari cache ---
-                    pvd_stego_extract = PVDSteganography()
-                    extracted_message = pvd_stego_extract.extract(stego_image_rgb, message_bit_length_extract)
+                    # --- PERUBAHAN DI SINI: Inisialisasi dinamis ---
+                    emd_stego_extract = EMDSteganography(n=emd_extract_n)
+                    extracted_message = emd_stego_extract.extract(stego_image_rgb, message_bit_length_extract)
                     
                     st.subheader("Extracted Message")
                     st.text_area("Result", value=extracted_message, height=100, disabled=True)
@@ -195,8 +219,8 @@ def draw_pvd_extract_tab():
                     if optional_original_message:
                         with st.spinner("Calculating robustness (BER) against 32 attacks..."):
                             original_binary_message = message_to_binary(optional_original_message)
-                            # --- PERUBAHAN DI SINI: Menggunakan instance dari cache ---
-                            tester = RobustnessTester(PVDSteganography(), original_binary_message)
+                            # --- PERUBAHAN DI SINI: Menggunakan instance dinamis ---
+                            tester = RobustnessTester(emd_stego_extract, original_binary_message)
                             results = tester.run_all_tests(
                                 stego_image=stego_image_rgb,
                                 attack_configurations=ATTACK_CONFIGURATIONS,
@@ -208,11 +232,14 @@ def draw_pvd_extract_tab():
                                 ber_data.append({'Attack': attack_label, 'BER': ber})
                                 if attacked_img is not None:
                                     image_results.append((attack_label, ber, attacked_img))
+                            
                             df_ber = pd.DataFrame(ber_data)
                             st.dataframe(df_ber, height=300)
+
                             st.subheader("Attacked Images")
                             if image_results:
                                 make_image_grid(image_results, num_columns=4)
+                            
                     else:
                         st.info("Enter the original message to calculate robustness (BER).")
 

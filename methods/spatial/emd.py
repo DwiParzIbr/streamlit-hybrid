@@ -133,4 +133,4 @@ class EMDSteganography:
         final_binary_string = extracted_bits[:bit_length]
         return binary_to_message(final_binary_string)
     
-PVD_DEFAULT_PARAM = {'n': 2}
+EMD_DEFAULT_PARAM = {'n': 2}
