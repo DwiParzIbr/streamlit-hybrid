@@ -5,23 +5,33 @@ from helpers.message_generator import create_pattern_padded_message
 
 # Impor konstanta
 from constants import (
-    METHOD_LSB, METHOD_PVD, METHOD_EMD, METHOD_DCT, METHOD_DWT, METHODS_ALL, # <--- DIPERBARUI
-    DEFAULT_MESSAGE, DEFAULT_TARGET_BIT_SIZE
+    METHODS_ALL, DEFAULT_MESSAGE, DEFAULT_TARGET_BIT_SIZE,
+    METHOD_LSB, METHOD_PVD, METHOD_EMD, 
+    METHOD_DCT, METHOD_DWT, METHOD_FFT, 
+    METHOD_DCT_LSB, METHOD_DCT_PVD, METHOD_DCT_EMD # <--- DIPERBARUI
 )
 
 # Impor parameter default
 from methods.spatial.lsb import LSB_DEFAULT_PARAM
-from methods.spatial.pvd import PVD_DEFAULT_PARAM
-from methods.spatial.emd import EMD_DEFAULT_PARAM
+from methods.spatial.pvd import PVD_DEFAULT_PARAM 
+from methods.spatial.emd import EMD_DEFAULT_PARAM 
 from methods.frequency.dct import DCT_DEFAULT_PARAM
-from methods.frequency.dwt import DWT_DEFAULT_PARAM # <--- DITAMBAHKAN
+from methods.frequency.dwt import DWT_DEFAULT_PARAM
+from methods.frequency.fft import FFT_DEFAULT_PARAM
+from methods.hybrid.dct_lsb import DCT_LSB_DEFAULT_PARAM
+from methods.hybrid.dct_pvd import DCT_PVD_DEFAULT_PARAM
+from methods.hybrid.dct_emd import DCT_EMD_DEFAULT_PARAM # <--- DITAMBAHKAN
 
 # Impor fungsi UI
 from ui_flows.lsb_ui import draw_lsb_embed_tab, draw_lsb_extract_tab
 from ui_flows.pvd_ui import draw_pvd_embed_tab, draw_pvd_extract_tab
 from ui_flows.emd_ui import draw_emd_embed_tab, draw_emd_extract_tab
 from ui_flows.dct_ui import draw_dct_embed_tab, draw_dct_extract_tab
-from ui_flows.dwt_ui import draw_dwt_embed_tab, draw_dwt_extract_tab # <--- DITAMBAHKAN
+from ui_flows.dwt_ui import draw_dwt_embed_tab, draw_dwt_extract_tab
+from ui_flows.fft_ui import draw_fft_embed_tab, draw_fft_extract_tab
+from ui_flows.dct_lsb_ui import draw_dct_lsb_embed_tab, draw_dct_lsb_extract_tab
+from ui_flows.dct_pvd_ui import draw_dct_pvd_embed_tab, draw_dct_pvd_extract_tab
+from ui_flows.dct_emd_ui import draw_dct_emd_embed_tab, draw_dct_emd_extract_tab # <--- DITAMBAHKAN
 
 
 # --- Session State Initialization ---
@@ -33,7 +43,11 @@ if 'lsb_embed_msg' not in st.session_state: st.session_state.lsb_embed_msg = def
 if 'pvd_embed_msg' not in st.session_state: st.session_state.pvd_embed_msg = default_padded_msg
 if 'emd_embed_msg' not in st.session_state: st.session_state.emd_embed_msg = default_padded_msg
 if 'dct_embed_msg' not in st.session_state: st.session_state.dct_embed_msg = default_padded_msg
-if 'dwt_embed_msg' not in st.session_state: st.session_state.dwt_embed_msg = default_padded_msg # <--- DITAMBAHKAN
+if 'dwt_embed_msg' not in st.session_state: st.session_state.dwt_embed_msg = default_padded_msg
+if 'fft_embed_msg' not in st.session_state: st.session_state.fft_embed_msg = default_padded_msg
+if 'dct_lsb_embed_msg' not in st.session_state: st.session_state.dct_lsb_embed_msg = default_padded_msg
+if 'dct_pvd_embed_msg' not in st.session_state: st.session_state.dct_pvd_embed_msg = default_padded_msg
+if 'dct_emd_embed_msg' not in st.session_state: st.session_state.dct_emd_embed_msg = default_padded_msg # <--- DITAMBAHKAN
 
 # Hasil Embed
 if 'lsb_stego_image_bytes' not in st.session_state: st.session_state.lsb_stego_image_bytes = None
@@ -44,10 +58,18 @@ if 'emd_stego_image_bytes' not in st.session_state: st.session_state.emd_stego_i
 if 'emd_params_json' not in st.session_state: st.session_state.emd_params_json = None
 if 'dct_stego_image_bytes' not in st.session_state: st.session_state.dct_stego_image_bytes = None
 if 'dct_params_json' not in st.session_state: st.session_state.dct_params_json = None
-if 'dwt_stego_image_bytes' not in st.session_state: st.session_state.dwt_stego_image_bytes = None # <--- DITAMBAHKAN
-if 'dwt_params_json' not in st.session_state: st.session_state.dwt_params_json = None # <--- DITAMBAHKAN
+if 'dwt_stego_image_bytes' not in st.session_state: st.session_state.dwt_stego_image_bytes = None
+if 'dwt_params_json' not in st.session_state: st.session_state.dwt_params_json = None
+if 'fft_stego_image_bytes' not in st.session_state: st.session_state.fft_stego_image_bytes = None
+if 'fft_params_json' not in st.session_state: st.session_state.fft_params_json = None
+if 'dct_lsb_stego_image_bytes' not in st.session_state: st.session_state.dct_lsb_stego_image_bytes = None
+if 'dct_lsb_params_json' not in st.session_state: st.session_state.dct_lsb_params_json = None
+if 'dct_pvd_stego_image_bytes' not in st.session_state: st.session_state.dct_pvd_stego_image_bytes = None
+if 'dct_pvd_params_json' not in st.session_state: st.session_state.dct_pvd_params_json = None
+if 'dct_emd_stego_image_bytes' not in st.session_state: st.session_state.dct_emd_stego_image_bytes = None # <--- DITAMBAHKAN
+if 'dct_emd_params_json' not in st.session_state: st.session_state.dct_emd_params_json = None # <--- DITAMBAHKAN
 
-# Parameter Ekstraksi
+# Parameter Ekstraksi (Hanya bagian LSB & PVD yang ditampilkan untuk brevity)
 if 'lsb_extract_bits_per_channel' not in st.session_state:
     st.session_state.lsb_extract_bits_per_channel = LSB_DEFAULT_PARAM['bits_per_channel']
 if 'lsb_extract_bit_length' not in st.session_state:
@@ -66,8 +88,6 @@ if 'dct_extract_embed_positions' not in st.session_state:
     st.session_state.dct_extract_embed_positions = "Mid Frequencies" 
 if 'dct_extract_bit_length' not in st.session_state:
     st.session_state.dct_extract_bit_length = 512
-
-# --- PERUBAHAN DI SINI: Inisialisasi state DWT ---
 if 'dwt_extract_wavelet' not in st.session_state:
     st.session_state.dwt_extract_wavelet = DWT_DEFAULT_PARAM['wavelet']
 if 'dwt_extract_level' not in st.session_state:
@@ -82,6 +102,58 @@ if 'dwt_extract_robust_mode' not in st.session_state:
     st.session_state.dwt_extract_robust_mode = DWT_DEFAULT_PARAM['robust_mode']
 if 'dwt_extract_bit_length' not in st.session_state:
     st.session_state.dwt_extract_bit_length = 512
+if 'fft_extract_r_in' not in st.session_state:
+    st.session_state.fft_extract_r_in = FFT_DEFAULT_PARAM['r_in']
+if 'fft_extract_r_out' not in st.session_state:
+    st.session_state.fft_extract_r_out = FFT_DEFAULT_PARAM['r_out']
+if 'fft_extract_header_repeat' not in st.session_state:
+    st.session_state.fft_extract_header_repeat = FFT_DEFAULT_PARAM['header_repeat']
+if 'fft_extract_payload_repeat' not in st.session_state:
+    st.session_state.fft_extract_payload_repeat = FFT_DEFAULT_PARAM['payload_repeat']
+if 'fft_extract_header_channel' not in st.session_state:
+    st.session_state.fft_extract_header_channel = FFT_DEFAULT_PARAM['header_channel']
+if 'fft_extract_payload_channel' not in st.session_state:
+    st.session_state.fft_extract_payload_channel = FFT_DEFAULT_PARAM['payload_channel']
+if 'fft_extract_mag_min_boost' not in st.session_state:
+    st.session_state.fft_extract_mag_min_boost = FFT_DEFAULT_PARAM['mag_min_boost']
+if 'fft_extract_bit_length' not in st.session_state:
+    st.session_state.fft_extract_bit_length = 512 
+if 'dct_lsb_extract_dct_lsb_ratio' not in st.session_state:
+    st.session_state.dct_lsb_extract_dct_lsb_ratio = DCT_LSB_DEFAULT_PARAM['dct_lsb_ratio'][0]
+if 'dct_lsb_extract_quant_factor' not in st.session_state:
+    st.session_state.dct_lsb_extract_quant_factor = DCT_LSB_DEFAULT_PARAM['dct_params']['quant_factor']
+if 'dct_lsb_extract_embed_positions' not in st.session_state:
+    st.session_state.dct_lsb_extract_embed_positions = "Mid Frequencies"
+if 'dct_lsb_extract_bits_per_channel' not in st.session_state:
+    st.session_state.dct_lsb_extract_bits_per_channel = DCT_LSB_DEFAULT_PARAM['lsb_params']['bits_per_channel']
+if 'dct_lsb_extract_dct_bit_length' not in st.session_state:
+    st.session_state.dct_lsb_extract_dct_bit_length = 256
+if 'dct_lsb_extract_lsb_bit_length' not in st.session_state:
+    st.session_state.dct_lsb_extract_lsb_bit_length = 256
+if 'dct_pvd_extract_dct_pvd_ratio' not in st.session_state:
+    st.session_state.dct_pvd_extract_dct_pvd_ratio = DCT_PVD_DEFAULT_PARAM['dct_pvd_ratio'][0]
+if 'dct_pvd_extract_quant_factor' not in st.session_state:
+    st.session_state.dct_pvd_extract_quant_factor = DCT_PVD_DEFAULT_PARAM['dct_params']['quant_factor']
+if 'dct_pvd_extract_embed_positions' not in st.session_state:
+    st.session_state.dct_pvd_extract_embed_positions = "Mid Frequencies"
+if 'dct_pvd_extract_dct_bit_length' not in st.session_state:
+    st.session_state.dct_pvd_extract_dct_bit_length = 256
+if 'dct_pvd_extract_pvd_bit_length' not in st.session_state:
+    st.session_state.dct_pvd_extract_pvd_bit_length = 256
+
+# --- PERUBAHAN DI SINI: Inisialisasi state DCT_EMD ---
+if 'dct_emd_extract_dct_emd_ratio' not in st.session_state:
+    st.session_state.dct_emd_extract_dct_emd_ratio = DCT_EMD_DEFAULT_PARAM['dct_emd_ratio'][0]
+if 'dct_emd_extract_quant_factor' not in st.session_state:
+    st.session_state.dct_emd_extract_quant_factor = DCT_EMD_DEFAULT_PARAM['dct_params']['quant_factor']
+if 'dct_emd_extract_embed_positions' not in st.session_state:
+    st.session_state.dct_emd_extract_embed_positions = "Mid Frequencies" # Asumsi dari default
+if 'dct_emd_extract_n' not in st.session_state:
+    st.session_state.dct_emd_extract_n = DCT_EMD_DEFAULT_PARAM['emd_params']['n']
+if 'dct_emd_extract_dct_bit_length' not in st.session_state:
+    st.session_state.dct_emd_extract_dct_bit_length = 256
+if 'dct_emd_extract_emd_bit_length' not in st.session_state:
+    st.session_state.dct_emd_extract_emd_bit_length = 256
 # --- AKHIR PERUBAHAN ---
 
 
@@ -94,10 +166,14 @@ st.sidebar.write(f"• {METHOD_EMD}")
 st.sidebar.divider()
 st.sidebar.header("Frequency Domain")
 st.sidebar.write(f"• {METHOD_DCT}")
-st.sidebar.write(f"• {METHOD_DWT}") # <--- DITAMBAHKAN
+st.sidebar.write(f"• {METHOD_DWT}")
+st.sidebar.write(f"• {METHOD_FFT}")
 st.sidebar.divider()
-# st.sidebar.header("Hybrid") # Dihapus
-# st.sidebar.divider()
+st.sidebar.header("Hybrid")
+st.sidebar.write(f"• {METHOD_DCT_LSB}")
+st.sidebar.write(f"• {METHOD_DCT_PVD}")
+st.sidebar.write(f"• {METHOD_DCT_EMD}") # <--- DITAMBAHKAN
+st.sidebar.divider()
 selected_method = st.sidebar.radio("Choose Method", METHODS_ALL, key="final_method_selector", label_visibility="collapsed")
 
 # --- Konten Utama (Routing) ---
@@ -115,8 +191,16 @@ with tab_embed:
         draw_emd_embed_tab()
     elif selected_method == METHOD_DCT:
         draw_dct_embed_tab()
-    elif selected_method == METHOD_DWT: # <--- DITAMBAHKAN
+    elif selected_method == METHOD_DWT:
         draw_dwt_embed_tab()
+    elif selected_method == METHOD_FFT:
+        draw_fft_embed_tab()
+    elif selected_method == METHOD_DCT_LSB:
+        draw_dct_lsb_embed_tab()
+    elif selected_method == METHOD_DCT_PVD:
+        draw_dct_pvd_embed_tab()
+    elif selected_method == METHOD_DCT_EMD: # <--- DITAMBAHKAN
+        draw_dct_emd_embed_tab()
 
 # --- Tab Extract ---
 with tab_extract:
@@ -130,5 +214,13 @@ with tab_extract:
         draw_emd_extract_tab()
     elif selected_method == METHOD_DCT:
         draw_dct_extract_tab()
-    elif selected_method == METHOD_DWT: # <--- DITAMBAHKAN
+    elif selected_method == METHOD_DWT:
         draw_dwt_extract_tab()
+    elif selected_method == METHOD_FFT:
+        draw_fft_extract_tab()
+    elif selected_method == METHOD_DCT_LSB:
+        draw_dct_lsb_extract_tab()
+    elif selected_method == METHOD_DCT_PVD:
+        draw_dct_pvd_extract_tab()
+    elif selected_method == METHOD_DCT_EMD: # <--- DITAMBAHKAN
+        draw_dct_emd_extract_tab()

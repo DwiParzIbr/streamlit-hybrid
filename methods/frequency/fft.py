@@ -282,7 +282,7 @@ class FFTSteganography:
 
         return binary_to_message(bits)
         
-method_params = {
+FFT_DEFAULT_PARAM = {
     'r_in': 0.1,
     'r_out': 0.4,
     'header_repeat': 3,
