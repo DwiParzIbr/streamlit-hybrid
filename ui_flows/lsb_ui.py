@@ -106,16 +106,6 @@ def draw_lsb_embed_tab():
                 file_name="lsb_parameters.json",
                 mime="application/json"
             )
-            
-            # --- PERUBAHAN DI SINI: Menampilkan pesan yang disisipkan ---
-            st.write("**Message Embedded**")
-            st.text_area(
-                "Embedded Message", 
-                value=st.session_state.lsb_embed_msg, # Membaca dari state
-                height=100, 
-                disabled=True, 
-                key="lsb_embedded_msg_display" # Key baru untuk widget ini
-            )
 
 def draw_lsb_extract_tab():
     """Menampilkan UI untuk tab Extract LSB."""
