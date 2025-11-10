@@ -382,8 +382,12 @@ with tab_embed:
         draw_dwt_lsb_embed_tab()
     elif selected_method == METHOD_DWT_PVD:
         draw_dwt_pvd_embed_tab()
+    elif selected_method == METHOD_DWT_EMD:
+        draw_dwt_emd_embed_tab()
     elif selected_method == METHOD_FFT_LSB:
         draw_fft_lsb_embed_tab()
+    elif selected_method == METHOD_FFT_PVD:
+        draw_fft_pvd_embed_tab()
     elif selected_method == METHOD_FFT_EMD: # <--- DITAMBAHKAN
         draw_fft_emd_embed_tab()
 
@@ -413,7 +417,11 @@ with tab_extract:
         draw_dwt_lsb_extract_tab()
     elif selected_method == METHOD_DWT_PVD:
         draw_dwt_pvd_extract_tab()
+    elif selected_method == METHOD_DWT_EMD:
+        draw_dwt_emd_extract_tab()
     elif selected_method == METHOD_FFT_LSB:
         draw_fft_lsb_extract_tab()
+    elif selected_method == METHOD_FFT_PVD:
+        draw_fft_pvd_extract_tab()
     elif selected_method == METHOD_FFT_EMD: # <--- DITAMBAHKAN
         draw_fft_emd_extract_tab()
