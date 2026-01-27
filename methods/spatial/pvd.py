@@ -54,7 +54,8 @@ class PVDSteganography:
             raise ValueError(f"Pesan terlalu panjang! Butuh {message_length} bits, kapasitas {max_capacity} bits.")
 
         height, width, _ = cover_image.shape
-        stego_image = cover_image.copy().astype(np.float64)
+        # UBAH TIPE DATA KE INT32 AGAR AMAN SAAT OPERASI MATEMATIKA (MENCEGAH OVERFLOW SEMENTARA)
+        stego_image = cover_image.copy().astype(np.int32)
         binary_index = 0
 
         for row in range(height):
@@ -64,7 +65,7 @@ class PVDSteganography:
                 for channel in range(3):
                     if binary_index >= message_length: break
 
-                    p1, p2 = int(stego_image[row, col, channel]), int(stego_image[row, col + 1, channel])
+                    p1, p2 = stego_image[row, col, channel], stego_image[row, col + 1, channel]
                     diff = p2 - p1
                     _, capacity, _, _ = self.get_range_and_capacity(diff)
                     if capacity == 0: continue
@@ -84,33 +85,30 @@ class PVDSteganography:
                     adj1, adj2 = adjustment // 2, adjustment - (adjustment // 2)
                     p1_new, p2_new = p1 - adj1, p2 + adj2
 
-                    # Penanganan Underflow/Overflow
-                    if p1_new < 0:
-                        p2_new += p1_new
-                        p1_new = 0
-                    elif p1_new > 255:
-                        p2_new -= (p1_new - 255)
-                        p1_new = 255
+                    # --- BAGIAN YANG DIPERBAIKI (Robust Boundary Check) ---
+                    # Menggeser kedua piksel secara bersamaan agar selisih (diff) tetap terjaga
+                    
+                    # 1. Cek Underflow (< 0) -> Geser KEDUANYA ke atas
+                    min_val = min(p1_new, p2_new)
+                    if min_val < 0:
+                        offset = -min_val
+                        p1_new += offset
+                        p2_new += offset
 
-                    if p2_new < 0:
-                        p1_new += p2_new
-                        p2_new = 0
-                    elif p2_new > 255:
-                        p1_new -= (p2_new - 255)
-                        p2_new = 255
-
-                    # Failsafe clip
-                    if p1_new < 0: p1_new = 0
-                    if p1_new > 255: p1_new = 255
-                    if p2_new < 0: p2_new = 0
-                    if p2_new > 255: p2_new = 255
+                    # 2. Cek Overflow (> 255) -> Geser KEDUANYA ke bawah
+                    max_val = max(p1_new, p2_new)
+                    if max_val > 255:
+                        offset = max_val - 255
+                        p1_new -= offset
+                        p2_new -= offset
+                    # ------------------------------------------------------
 
                     stego_image[row, col, channel] = p1_new
                     stego_image[row, col + 1, channel] = p2_new
                     binary_index += bits_needed
 
-            final_stego_image = np.clip(stego_image, 0, 255).astype(np.uint8)
-            return final_stego_image, message_length
+        final_stego_image = np.clip(stego_image, 0, 255).astype(np.uint8)
+        return final_stego_image, message_length
 
     def extract(self, stego_image: np.ndarray, bit_length: int) -> str:
         """
@@ -120,6 +118,9 @@ class PVDSteganography:
         height, width, _ = stego_image.shape
         bit_buffer = ""
         bits_extracted = 0
+        
+        # Casting ke int32 untuk keamanan perhitungan diff
+        stego_work = stego_image.astype(np.int32)
 
         for row in range(height):
             for col in range(0, width - 1, 2):
@@ -128,7 +129,7 @@ class PVDSteganography:
                 for channel in range(3):
                     if bits_extracted >= bit_length: break
 
-                    p1, p2 = int(stego_image[row, col, channel]), int(stego_image[row, col + 1, channel])
+                    p1, p2 = stego_work[row, col, channel], stego_work[row, col + 1, channel]
                     diff = p2 - p1
                     _, capacity, _, _ = self.get_range_and_capacity(diff)
                     if capacity == 0: continue
@@ -140,16 +141,13 @@ class PVDSteganography:
 
                     extracted_value = abs(diff) % (2**capacity)
 
-                    # --- PERBAIKAN BUG KRUSIAL ---
-                    # Format nilai yang diekstrak ke 'bits_to_take' (bukan 'capacity')
-                    # untuk mendapatkan jumlah bit yang benar dan padding nol yang benar.
+                    # Format nilai yang diekstrak ke 'bits_to_take'
                     extracted_bits = format(extracted_value, f'0{bits_to_take}b')
-                    # ---------------------------
 
                     bit_buffer += extracted_bits
                     bits_extracted += bits_to_take
 
-            # Kembalikan hanya bit yang diminta
-            return binary_to_message(bit_buffer[:bit_length])
-        
+        # Kembalikan hanya bit yang diminta
+        return binary_to_message(bit_buffer[:bit_length])
+
 PVD_DEFAULT_PARAM = {}
