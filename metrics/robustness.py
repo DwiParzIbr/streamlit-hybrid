@@ -198,9 +198,12 @@ ATTACK_CONFIGURATIONS = [
     {'name': 'SP_Noise', 'label': 'S&P (d=0.03)', 'density': 0.03},
 
     # 3. Serangan Geometris
+    {'name': 'Crop', 'label': 'Crop (3%)', 'crop_percent': 3},
+    {'name': 'Crop', 'label': 'Crop (5%)', 'crop_percent': 5},
     {'name': 'Crop', 'label': 'Crop (10%)', 'crop_percent': 10},
 
     {'name': 'Rotate', 'label': 'Rotate (3°)', 'angle': 3},
+    {'name': 'Rotate', 'label': 'Rotate (5°)', 'angle': 5},
     {'name': 'Rotate', 'label': 'Rotate (9°)', 'angle': 9},
     {'name': 'Rotate', 'label': 'Rotate (18°)', 'angle': 18},
     {'name': 'Rotate', 'label': 'Rotate (36°)', 'angle': 36},
@@ -209,6 +212,8 @@ ATTACK_CONFIGURATIONS = [
     {'name': 'Scale', 'label': 'Scale (10%)', 'downscale_factor': 0.1},
     {'name': 'Scale', 'label': 'Scale (20%)', 'downscale_factor': 0.2},
     {'name': 'Scale', 'label': 'Scale (40%)', 'downscale_factor': 0.4},
+    {'name': 'Scale', 'label': 'Scale (50%)', 'downscale_factor': 0.50},
+    {'name': 'Scale', 'label': 'Scale (75%)', 'downscale_factor': 0.75},
     {'name': 'Scale', 'label': 'Scale (60%)', 'downscale_factor': 0.6},
     {'name': 'Scale', 'label': 'Scale (80%)', 'downscale_factor': 0.8},
     {'name': 'Scale', 'label': 'Scale (100%)', 'downscale_factor': 1.0},
@@ -217,6 +222,8 @@ ATTACK_CONFIGURATIONS = [
     {'name': 'Scale', 'label': 'Scale (200%)', 'downscale_factor': 2.0},
 
     # 4. Serangan Filter & Warna
+    {'name': 'Blur', 'label': 'Blur (3x3)', 'kernel_size': (3, 3)},
+    {'name': 'Blur', 'label': 'Blur (5x5)', 'kernel_size': (5, 5)},
     {'name': 'Blur', 'label': 'Blur (9x9)', 'kernel_size': (9, 9)},
     {'name': 'Blur', 'label': 'Blur (15x15)', 'kernel_size': (15, 15)},
     {'name': 'Blur', 'label': 'Blur (21x21)', 'kernel_size': (21, 21)},
