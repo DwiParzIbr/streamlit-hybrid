@@ -196,6 +196,7 @@ ATTACK_CONFIGURATIONS = [
 
     {'name': 'SP_Noise', 'label': 'S&P (d=0.01)', 'density': 0.01},
     {'name': 'SP_Noise', 'label': 'S&P (d=0.03)', 'density': 0.03},
+    {'name': 'SP_Noise', 'label': 'S&P (d=0.05)', 'density': 0.05},
 
     # 3. Serangan Geometris
     {'name': 'Crop', 'label': 'Crop (3%)', 'crop_percent': 3},
