@@ -9,7 +9,7 @@ DEFAULT_MESSAGE = (
     "sequence includes alphanumeric characters, standard punctuation "
     "marks (!@#$%^&*<>?), and extended UTF-8 characters (é, ç, ñ)."
 )
-DEFAULT_TARGET_BIT_SIZE = 512
+DEFAULT_TARGET_BIT_SIZE = 4096
 
 # --- Method Names ---
 METHOD_LSB = "Spatial - LSB"
