@@ -2,11 +2,14 @@
 
 # --- Helpers ---
 DEFAULT_MESSAGE = (
-    "This message uses deterministic padding. 🚀 "
-    "The padding is a repeating, non-random sequence. "
-    "Let's test it: 123!@#<>? éçñ. 😊👍"
+    "This message serves as a standardized test payload to evaluate "
+    "the embedding capacity, encoding accuracy, and robustness of "
+    "the proposed steganography algorithm. To verify the integrity "
+    "of the extraction process across different byte values, this "
+    "sequence includes alphanumeric characters, standard punctuation "
+    "marks (!@#$%^&*<>?), and extended UTF-8 characters (é, ç, ñ)."
 )
-DEFAULT_TARGET_BIT_SIZE = 512
+DEFAULT_TARGET_BIT_SIZE = 4096
 
 # --- Method Names ---
 METHOD_LSB = "Spatial - LSB"
